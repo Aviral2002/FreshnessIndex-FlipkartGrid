@@ -1,0 +1,8 @@
+# Ignore Python virtual environments
+freshness/
+
+# Other things to ignore
+__pycache__/
+*.pyc
+env/
+node_modules/

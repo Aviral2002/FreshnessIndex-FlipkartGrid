@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freshness Detection Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+</head>
+<body>
+    <h1>Freshness Detection Test</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <button id="capture">Capture and Classify</button>
+    <p id="result"></p>
+
+    <script>
+        const video = document.getElementById('video');
+        const resultElement = document.getElementById('result');
+        const socket = io('http://localhost:5000'); // Change this if your server is on a different address
+
+        // Get access to the camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the camera: ", err);
+            });
+
+        document.getElementById('capture').onclick = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const base64Image = canvas.toDataURL('image/jpeg').split(',')[1]; // Get the base64 part
+
+            // Send the base64 image to the server
+            socket.emit('message', base64Image);
+        };
+
+        // Receive classification result from the server
+        socket.on('message', (result) => {
+            resultElement.innerText = `Classification: ${result.classification}`;
+        });
+
+        // Handle errors from the server
+        socket.on('error', (error) => {
+            resultElement.innerText = `Error: ${error.error}`;
+        });
+    </script>
+</body>
+</html>
